@@ -1,9 +1,0 @@
-# DevEnv.hxml
-# Makes auto-completion work in VS code while developing this project.
-# Also checks null-safety when executed (`haxe DevEnv.hxml`).
--D reflaxe_runtime
--D cxx_runtime
---macro nullSafety("cxxcompiler")
--lib reflaxe
--cp src
-cxxcompiler

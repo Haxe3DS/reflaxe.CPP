@@ -426,7 +426,10 @@ public:
 			IComp.addInclude(i, true, true);
 		}
 
-		return 'namespace haxe {
+		return '#include "cxx_DynamicToString.h"
+#include <map>
+		
+namespace haxe {
 
 [[noreturn]]
 void makeError(const char* msg);
@@ -476,6 +479,7 @@ struct _mm_type<std::unique_ptr<T>> { using inner = T; constexpr static DynamicT
 	}
 
 // ---
+
 
 // The class used for Haxe\'s `Dynamic` type.
 class Dynamic {
@@ -675,16 +679,19 @@ public:
 		return Dynamic();
 	}
 
+	std::map<std::string, Dynamic> prop;
 	Dynamic getProp(std::string name) {
-		Dynamic result = getPropSafe(name);
-		if(!result.isEmpty()) return result;
-		makeError(\"Property does not exist\");
+		Dynamic r;
+		try {
+			r = haxe::Dynamic(prop[name]);
+		} catch(const std::out_of_range& e) {
+			r = "";
+		}
+		return r;
 	}
 
 	Dynamic setProp(std::string name, Dynamic value) {
-		Dynamic result = setPropSafe(name, value);
-		if(!result.isEmpty()) return result;
-		makeError(\"Property does not exist\");
+		return prop[name] = value;
 	}
 
 	// operators
@@ -817,6 +824,15 @@ public:
 			return std::to_string(self.template asType<double>());
 		} else if(self.isBool()) {
 			return self.template asType<bool>() ? std::string(\"true\") : std::string(\"false\");
+		} else if(self.isString()) {
+			return self.template asType<std::string>();
+		} else if constexpr(haxe::is_deque<T>::value) {
+			std::string result = "[";
+			auto len = static_cast<std::deque<haxe::Dynamic>>(self).size();
+			for(decltype(len) i = 0; i < len; i++) {
+				result += (i > 0 ? ", " : "") + haxe::Dynamic(static_cast<std::deque<haxe::Dynamic>>(self)[i]).toString();
+			}
+			return result + "]";
 		}
 		return std::string(\"Dynamic\");
 	}

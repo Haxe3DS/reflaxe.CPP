@@ -1,5 +1,0 @@
-# The following are added automatically:
-# -lib reflaxe.cpp
-# -D cpp-output=out
-
-SomeClass
