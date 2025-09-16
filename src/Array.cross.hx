@@ -88,6 +88,7 @@ class HxArray {
 	}
 
 	public static function indexOf<T>(a: cxx.Ptr<Array<T>>, x: T, fromIndex: Int = 0): Int {
+		@:include("algorithm", true)
 		final it: cxx.Auto = untyped __cpp__("std::find({0}, {1}, {2})", a.begin(), a.end(), x);
 		return if(untyped it != a.end()) {
 			cxx.Stdlib.ccast(untyped it - a.begin());
@@ -98,6 +99,7 @@ class HxArray {
 
 	public static function lastIndexOf<T>(a: cxx.Ptr<Array<T>>, x: T, fromIndex: Int = -1): Int {
 		final offset = fromIndex < 0 ? 0 : (a.length - (fromIndex + 1));
+		@:include("algorithm", true)
 		final it: cxx.Auto = untyped __cpp__("std::find({0}, {1}, {2})", a.rbegin() + offset, a.rend(), x);
 		return if(untyped it != a.rend()) {
 			cxx.Stdlib.ccast(untyped it - a.rbegin());
