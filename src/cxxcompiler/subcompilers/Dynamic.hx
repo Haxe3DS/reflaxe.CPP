@@ -428,6 +428,11 @@ public:
 
 		return '#include "cxx_DynamicToString.h"
 #include <map>
+
+// Safe Define
+#ifndef DYNAMIC_MODE
+#define DYNAMIC_MODE
+#endif
 		
 namespace haxe {
 

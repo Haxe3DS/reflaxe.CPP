@@ -9,7 +9,6 @@ package cxxcompiler.subcompilers;
 
 #if (macro || cxx_runtime)
 
-import reflaxe.helpers.Context;
 import haxe.macro.Expr;
 import haxe.macro.Type;
 
@@ -151,7 +150,11 @@ class Anon extends SubCompiler {
 
 	public function applyAnonMMConversion(cppName: String, cppArgs: Array<String>, tmmt: MemoryManagementType): String {
 		return switch(tmmt) {
-			case Value: cppName + "::make(" + cppArgs.join(", ") + ")";
+			case Value: if (cppArgs.length != 0) {
+				'$cppName::make(${cppArgs.join(", ")})';
+			} else {
+				'${cppName.substr(0, 6)}Dynamic(nullptr)';
+			}
 			case UnsafePtr: throw "Unable to construct.";
 			case SharedPtr: "haxe::shared_anon<" + cppName + ">(" + cppArgs.join(", ") + ")";
 			case UniquePtr: "haxe::unique_anon<" + cppName + ">(" + cppArgs.join(", ") + ")";
@@ -251,18 +254,30 @@ class Anon extends SubCompiler {
 			final templateFuncs = templateFunctionAssigns.length > 0 ? ("{\n" + templateFunctionAssigns.map(a -> a.tab()).join("\n") + "\n}") : "\n{}";
 			final templateAssigns = templateConstructorAssigns.length > 0 ? (":\n\t" + templateConstructorAssigns.join(",\n\t")) : " ";
 			
-			var constructor = "\n// auto-construct from any object's fields\n";
-			constructor += "template<typename " + autoConstructTypeParamName + ">\n";
-			constructor += name + "(" + autoConstructTypeParamName + " o)" + templateAssigns + templateFuncs;
-			decl += constructor.tab() + "\n";
+			if (!StringTools.startsWith(name, "AnonStruct")) { // Always Check if name starts with anonstruct, if so, don't do it or else compiler errors!
+				var constructor = "\n// auto-construct from any object's fields\n";
+				constructor += "template<typename " + autoConstructTypeParamName + ">\n";
+				constructor += name + "(" + autoConstructTypeParamName + " o)" + templateAssigns + templateFuncs;
+				decl += constructor.tab() + "\n";
+			}
 		}
 
 		if(constructorParams.length > 0) {
-			final constructor = "\n// construct fields directly\nstatic " + name + " make(" + constructorParams.join(", ") + ") {\n\t" +
-				name + " result;\n\t" +
-				constructorAssigns.join(";\n\t") + ";" + 
-				"\n\treturn result;\n}";
-			decl += constructor.tab() + "\n";
+			function construct():String {
+				return if (StringTools.startsWith(name, "AnonStruct")) { // AnonStruct Mode
+					var out:String = "";
+					for (str in constructorAssigns) {
+						final varName = str.substr(str.lastIndexOf(" ")+1);
+						out += 'result.setProp("$varName", $varName);\n\t';
+					}
+				
+					'\n// construct fields directly\nstatic Dynamic make(${constructorParams.join(", ")}) {\n\tDynamic result = haxe::Dynamic(nullptr);\n\t$out\n\treturn result;\n}';
+				} else { 
+					'\n// construct fields directly\nstatic $name make(${constructorParams.join(", ")}) {\n\t$name result;\n\t${constructorAssigns.join(";\n\t")};\n\treturn result;\n}';
+				}
+			};
+
+			decl += construct().tab() + "\n";
 		}
 
 		if(fields.length > 0) {

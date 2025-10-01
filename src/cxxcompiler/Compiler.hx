@@ -753,12 +753,14 @@ class Compiler extends reflaxe.DirectToStringCompiler {
 		// Generate anonymous structures header.
 		if(genAnonStructHeader) {
 			var content = "#pragma once\n\n";
-			content += "#include \"" + optionalInfoHeaderName + "\"\n\n";
+			content += '#include "$optionalInfoHeaderName"\n';
+			content += '#include "dynamic/Dynamic.h"\n\n';
 			content += IComp.compileHeaderIncludes() + "\n\n";
 			content += "namespace haxe {\n\n";
 			content += anonContent;
 			content += "\n}";
 			setExtraFile(HeaderFolder + "/" + AnonStructHeaderFile + HeaderExt, content);
+			setExtraFile("include/dynamic/Dynamic.h", "// Required to be empty since you don't have dynamic variables, and without it it's gonna create compiler errors.");
 		}
 
 		// Generate haxe::optional_info header.
