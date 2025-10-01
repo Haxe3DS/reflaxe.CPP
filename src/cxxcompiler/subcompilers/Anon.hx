@@ -245,7 +245,7 @@ class Anon extends SubCompiler {
 		
 		decl += "\n\n\t// default constructor\n\t" + name + "() {}\n";
 
-		if(templateConstructorAssigns.length > 0 || templateFunctionAssigns.length > 0) {
+		if((templateConstructorAssigns.length > 0 || templateFunctionAssigns.length > 0) && !StringTools.startsWith(name, "AnonStruct")) { // Always Check if name starts with anonstruct, if so, don't do it or else compiler errors!
 			var autoConstructTypeParamName = "T";
 			while(templates.contains(autoConstructTypeParamName)) {
 				autoConstructTypeParamName += "_";
@@ -254,12 +254,10 @@ class Anon extends SubCompiler {
 			final templateFuncs = templateFunctionAssigns.length > 0 ? ("{\n" + templateFunctionAssigns.map(a -> a.tab()).join("\n") + "\n}") : "\n{}";
 			final templateAssigns = templateConstructorAssigns.length > 0 ? (":\n\t" + templateConstructorAssigns.join(",\n\t")) : " ";
 			
-			if (!StringTools.startsWith(name, "AnonStruct")) { // Always Check if name starts with anonstruct, if so, don't do it or else compiler errors!
-				var constructor = "\n// auto-construct from any object's fields\n";
-				constructor += "template<typename " + autoConstructTypeParamName + ">\n";
-				constructor += name + "(" + autoConstructTypeParamName + " o)" + templateAssigns + templateFuncs;
-				decl += constructor.tab() + "\n";
-			}
+			var constructor = "\n// auto-construct from any object's fields\n";
+			constructor += "template<typename " + autoConstructTypeParamName + ">\n";
+			constructor += name + "(" + autoConstructTypeParamName + " o)" + templateAssigns + templateFuncs;
+			decl += constructor.tab() + "\n";
 		}
 
 		if(constructorParams.length > 0) {
