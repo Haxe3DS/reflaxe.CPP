@@ -96,6 +96,8 @@ extern class Math {
 
 	@:include("cstdlib", true)
 	public extern inline static function random(): Float {
+		@:include("time.h", true)
+		untyped __cpp__('srand(time(NULL))');
 		return untyped __cpp__("(static_cast<float>(rand()) / static_cast<float>(RAND_MAX))");
 	}
 
