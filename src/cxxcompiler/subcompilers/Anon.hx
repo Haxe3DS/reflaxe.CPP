@@ -7,6 +7,7 @@
 
 package cxxcompiler.subcompilers;
 
+import haxe.macro.TypeTools;
 #if (macro || cxx_runtime)
 
 import haxe.macro.Expr;
@@ -235,7 +236,8 @@ class Anon extends SubCompiler {
 
 		var decl = "";
 
-		decl += "// { " + anonFields.map(f -> f.name + ": " + (#if macro haxe.macro.TypeTools.toString(f.type) #else "" #end)).join(", ") + " }\n";
+		decl += "// { " + anonFields.map(f -> f.name + ": " + (#if macro TypeTools.toString(f.type) #else "" #end)).join(", ") + " }\n";
+		final isHaxe = StringTools.startsWith(#if macro TypeTools.toString(anonFields[0].type) #else "" #end, "haxe.");
 
 		if(templates.length > 0) {
 			decl += "template<" + templates.map(t -> "typename " + t).join(", ") + ">\n";
@@ -262,7 +264,7 @@ class Anon extends SubCompiler {
 
 		if(constructorParams.length > 0) {
 			function construct():String {
-				return if (StringTools.startsWith(name, "AnonStruct")) { // AnonStruct Mode
+				return if (StringTools.startsWith(name, "AnonStruct") && !isHaxe) { // AnonStruct Mode
 					var out:String = "";
 					for (str in constructorAssigns) {
 						final varName = str.substr(str.lastIndexOf(" ")+1);
