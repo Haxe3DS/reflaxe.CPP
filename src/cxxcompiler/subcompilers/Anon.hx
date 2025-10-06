@@ -234,18 +234,21 @@ class Anon extends SubCompiler {
 
 		final templates = TComp.disableDynamicToTemplate();
 
-		var decl = "";
+		var decl =  "// { " + anonFields.map(f -> f.name + ": " + (#if macro TypeTools.toString(f.type) #else "" #end)).join(", ") + " }\n";
 
-		decl += "// { " + anonFields.map(f -> f.name + ": " + (#if macro TypeTools.toString(f.type) #else "" #end)).join(", ") + " }\n";
-		final isHaxe = StringTools.startsWith(#if macro TypeTools.toString(anonFields[0].type) #else "" #end, "haxe.");
+		var isDynamic:Bool = false;
+		for (f in anonFields) {
+			isDynamic = TypeTools.toString(f.type) == "Dynamic";
+			if (isDynamic) {
+				break;
+			}
+		}
 
 		if(templates.length > 0) {
 			decl += "template<" + templates.map(t -> "typename " + t).join(", ") + ">\n";
 		}
 
-		decl += "struct " + name + " {";
-		
-		decl += "\n\n\t// default constructor\n\t" + name + "() {}\n";
+		decl += "struct " + name + " {\n\n\t// default constructor\n\t" + name + "() {}\n";
 
 		if((templateConstructorAssigns.length > 0 || templateFunctionAssigns.length > 0) && !StringTools.startsWith(name, "AnonStruct")) { // Always Check if name starts with anonstruct, if so, don't do it or else compiler errors!
 			var autoConstructTypeParamName = "T";
@@ -264,16 +267,16 @@ class Anon extends SubCompiler {
 
 		if(constructorParams.length > 0) {
 			function construct():String {
-				return if (StringTools.startsWith(name, "AnonStruct") && !isHaxe) { // AnonStruct Mode
+				return if (StringTools.startsWith(name, "AnonStruct") && isDynamic) { // Dynamic Mode
 					var out:String = "";
 					for (str in constructorAssigns) {
 						final varName = str.substr(str.lastIndexOf(" ")+1);
-						out += 'result.setProp("$varName", $varName);\n\t';
+						out += '_result.setProp("$varName", $varName);\n\t';
 					}
 				
-					'\n// construct fields directly\nstatic Dynamic make(${constructorParams.join(", ")}) {\n\tDynamic result = haxe::Dynamic(nullptr);\n\t$out\n\treturn result;\n}';
+					'\n// construct fields directly\nstatic Dynamic make(${constructorParams.join(", ")}) {\n\tDynamic _result = haxe::Dynamic(nullptr);\n\t$out\n\treturn _result;\n}';
 				} else { 
-					'\n// construct fields directly\nstatic $name make(${constructorParams.join(", ")}) {\n\t$name result;\n\t${constructorAssigns.join(";\n\t")};\n\treturn result;\n}';
+					'\n// construct fields directly\nstatic $name make(${constructorParams.join(", ")}) {\n\t$name _result;\n\t${StringTools.replace(constructorAssigns.join(";\n\t"), "result.", "_result.")};\n\treturn _result;\n}';
 				}
 			};
 
