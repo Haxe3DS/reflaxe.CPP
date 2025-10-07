@@ -11,6 +11,8 @@
 
 package cxxcompiler.subcompilers;
 
+import haxe.rtti.Meta;
+import reflaxe.config.Meta;
 #if (macro || cxx_runtime)
 
 import reflaxe.helpers.Context;
