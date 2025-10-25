@@ -2,5 +2,5 @@ package cxx;
 
 @:cxxStd
 @:native("void*")
-extern abstract VoidPtr(Ptr<Dynamic>) from Ptr<Dynamic> {
+extern abstract VoidPtr(Dynamic) from Dynamic {
 }
