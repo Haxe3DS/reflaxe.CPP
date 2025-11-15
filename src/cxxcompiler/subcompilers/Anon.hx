@@ -248,7 +248,7 @@ class Anon extends SubCompiler {
 			decl += "template<" + templates.map(t -> "typename " + t).join(", ") + ">\n";
 		}
 
-		decl += "struct " + name + " {\n\n\t// default constructor\n\t" + name + "() {}\n";
+		decl += 'struct $name : public haxe::DTSClass {\n\n\t// default constructor\n\t$name() {}\n';
 
 		if((templateConstructorAssigns.length > 0 || templateFunctionAssigns.length > 0) && !StringTools.startsWith(name, "AnonStruct")) { // Always Check if name starts with anonstruct, if so, don't do it or else compiler errors!
 			var autoConstructTypeParamName = "T";
@@ -285,6 +285,10 @@ class Anon extends SubCompiler {
 
 		if(fields.length > 0) {
 			decl += "\n\t// fields\n" + fields.map(f -> f.tab() + ";").join("\n") + "\n";
+			decl += '\n\t// tostring\n\tstd::string toString() override {\n\t\treturn "{${fields.map(f -> {
+				final name:String = f.tab().split(" ")[1];
+				'$name: " + haxe::DynamicToString($name) + ';
+			}).join('", ')}"}";\n\t}\n';
 		}
 
 		if(extractorFuncs.length > 0) {

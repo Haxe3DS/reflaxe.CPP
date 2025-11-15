@@ -472,6 +472,7 @@ class Includes extends SubCompiler {
 	function compileIncludes(includeArr: Array<String>): String {
 		callAllLazyIncludes();
 		return if(includeArr.length > 0) {
+			includeArr.push('"cxx_DynamicToString.h"');
 			includeArr.sorted(Sort.includeBracketOrder).map(i -> "#include " + i).join("\n");
 		} else {
 			"";
