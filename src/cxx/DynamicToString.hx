@@ -48,7 +48,7 @@ struct DynamicToString: public std::string {
 			return s ? "true" : "false";
 		} else if constexpr(std::is_integral_v<T> || std::is_floating_point_v<T>) {
 			std::stringstream ss;
-			ss << std::setprecision(10) << (float)s;
+			ss << std::setprecision(10) << (double)s;
 			return ss.str();
 		} else if constexpr(std::is_convertible<T, std::string>::value) {
 			return std::string(s);
